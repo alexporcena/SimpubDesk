@@ -10,7 +10,6 @@
 
 using json = nlohmann::json;
 
-
 static size_t writeCallback(void* contents, size_t size, size_t nmemb, void* userp) {
     size_t realsize = size * nmemb;
     ((std::string*)userp)->append((char*)contents, realsize);
@@ -79,7 +78,6 @@ std::vector<Municipio> parseJsonApi(std::string& jsn) {
 							SimpubliString::ReplaceAll(nova_localidade, " ", "-");
 							SimpubliString::ReplaceAll(nova_localidade, "'", "-");
 							nova_localidade = SimpubliString::ToLower(nova_localidade);
-							std::cout << nova_localidade << std::endl;
 							
 							Municipio municipio;
 							municipio.id_ibge = std::stoi(id_localidade);

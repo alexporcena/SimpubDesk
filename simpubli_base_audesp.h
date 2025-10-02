@@ -37,10 +37,10 @@ protected:
 		std::string file_name;
 	};
 
-	static size_t WriteCallback(void* ptr, size_t size, size_t nmemb, void* stream);
 	std::vector<DownloadInfo> PrepareRequest();
 	static int PerformRequest(const DownloadInfo& info);
-	void ExecuteCurlRequestThread(std::vector<DownloadInfo>& info);
+	void ExecuteCurlRequestThread(std::vector<DownloadInfo>& info, int ini_pos);
+	static size_t WriteCallbackAudesp(void* ptr, size_t size, size_t nmemb, void* stream);
 	void UnzipFiles();
 	virtual void InsertDatabase() {};
 

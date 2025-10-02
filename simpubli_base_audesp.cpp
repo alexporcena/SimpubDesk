@@ -8,7 +8,7 @@ SimpubliBaseAudesp::SimpubliBaseAudesp() {
 SimpubliBaseAudesp::~SimpubliBaseAudesp() {
 }
 
-size_t SimpubliBaseAudesp::WriteCallback(void* ptr, size_t size, size_t nmemb, void* stream) {
+size_t SimpubliBaseAudesp::WriteCallbackAudesp(void* ptr, size_t size, size_t nmemb, void* stream) {
 	return fwrite(ptr, size, nmemb, (FILE*)stream);
 }
 
@@ -45,15 +45,15 @@ int SimpubliBaseAudesp::PerformRequest(const DownloadInfo& info) {
         errno_t err = fopen_s(&file_pointer, output_filename, "wb");
 
         if (err != 0 || file_pointer == nullptr) {
-            std::cerr << "Erro ao abrir/criar o arquivo de saída: " << output_filename << std::endl;
+            std::cerr << "Erro ao abrir/criar o arquivo de saÃ­da: " << err << std::endl;
             curl_easy_cleanup(curl);
-            curl_global_cleanup();
             return -1;
         }
+
         curl_easy_setopt(curl, CURLOPT_URL, url_c);
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallbackAudesp);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)file_pointer);
-        //curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
+        curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
 
         try {
             res = curl_easy_perform(curl);
@@ -79,14 +79,22 @@ int SimpubliBaseAudesp::PerformRequest(const DownloadInfo& info) {
     return 0;
 }
 
-void SimpubliBaseAudesp::ExecuteCurlRequestThread(std::vector<DownloadInfo>& info) {
+void SimpubliBaseAudesp::ExecuteCurlRequestThread(std::vector<DownloadInfo>& info, int ini_pos) {
+    
     std::vector<std::thread> threads;
+    std::vector<DownloadInfo> l_info;
+    int thr_number = 20;
+
+    for (unsigned a = ini_pos; a < (ini_pos + thr_number); a++) {
+        if (a < info.size()) {
+            l_info.push_back(info[a]);
+        }
+    }
 
     curl_global_init(CURL_GLOBAL_ALL);
 
-
-    for (const auto& d_info : info) {
-        threads.emplace_back(SimpubliBaseAudesp::PerformRequest, d_info);
+    for (const auto& d_info : l_info) {
+        threads.emplace_back(PerformRequest, d_info);
     }
     
     for (auto& t : threads) {
@@ -96,6 +104,13 @@ void SimpubliBaseAudesp::ExecuteCurlRequestThread(std::vector<DownloadInfo>& inf
     }
 
     curl_global_cleanup();
+    
+    if ((ini_pos + thr_number - 1) >= info.size()) {
+        return;
+    }
+    else {
+        ExecuteCurlRequestThread(info, ini_pos + thr_number);
+    }
 }
 
 void SimpubliBaseAudesp::UnzipFiles()
@@ -135,7 +150,7 @@ bool SimpubliBaseAudesp::ExecutAudesp()
     std::cout << "Iniciando o Download dos arquivos, por favor aguarde..." << std::endl;
     auto start = std::chrono::high_resolution_clock::now();
     std::vector<DownloadInfo> download_info = PrepareRequest();
-    ExecuteCurlRequestThread(download_info);
+    ExecuteCurlRequestThread(download_info, 0);
     std::cout << "Descompactando arquivos, por favor aguarde..." << std::endl;
     UnzipFiles();
     std::cout << "Salvando no banco de dados, por favor aguarde..." << std::endl;

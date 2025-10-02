@@ -4,6 +4,7 @@
 #include "simpubli_database.h"
 #include "simpubli_strings.h"
 #include "simpubli_audesp_receitas.h"
+#include "simpubli_audesp_despesas.h"
 #include "municipios.h"
 #include "receitas.h"
 
@@ -150,9 +151,10 @@ void displayHelp() {
 int readOption(int& option, bool& cont, int& arg) {
     cont = true;
     SimpubliAudespReceitas* sim_rec = new SimpubliAudespReceitas();
+    SimpubliAudespDespesas* sim_desp = new SimpubliAudespDespesas();
     
     if (arg == 0) {
-        display_menu();
+        display_menu();                           
         std::cin >> option;
     }
     
@@ -167,6 +169,7 @@ int readOption(int& option, bool& cont, int& arg) {
             sim_rec->ExecutAudesp();
             break;
         case 4:
+            sim_desp->ExecutAudesp();
             break;
         case 5:
             break;
